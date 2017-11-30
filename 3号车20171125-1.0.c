@@ -373,7 +373,7 @@ task main()
     updown_angle_value = SensorValue[updown_angle_sensor_2];
     run_left_encoder_value = SensorValue[run_left_encoder_sensor_3];
     run_right_encoder_value = SensorValue[run_right_encoder_sensor_1];
-		updown_bump_value = SensorValue[updown_bump_sensor_5];
+	updown_bump_value = SensorValue[updown_bump_sensor_5];
 
 
 	 /* if(updown_angle_value<1300)
@@ -413,7 +413,7 @@ task main()
 
 
 	//manual code area
-	  manual_run();
+	manual_run();
    /* if(bump_flag == 0)*/ manual_updown();
     manual_intake();
     manual_rotate();
