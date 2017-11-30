@@ -1,5 +1,6 @@
 #pragma config(Sensor, in1,    rotate_angle_sensor_1, sensorAnalog)
-#pragma config(Sensor, in2,    updown_angle_sensor_2, sensorAnalog)
+#pragma config(Sensor, in2,    updown_angle_sensor_2, sensorPotentiometer)
+#pragma config(Sensor, in3,    salver_potentiometer, sensorPotentiometer)
 #pragma config(Sensor, in7,    GYRO,           sensorGyro)
 #pragma config(Sensor, dgtl1,  run_right_encoder_sensor_1, sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  run_left_encoder_sensor_3, sensorQuadEncoder)
@@ -22,8 +23,8 @@
 
 //V1.0	I increased the static speed of the clip from 19 to 25
 //			by liu wenbin 20171125 night
-#define ANGLE_KP 10
-#define ANGLE_KD 0
+#define ANGLE_KP 26
+#define ANGLE_KD 100
 
 
 int run_left_encoder_value;
@@ -226,26 +227,82 @@ void Updown_Control(int updown_target_value)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
+{
+	while(SensorValue[salver_potentiometer]>820)
+	{
+		motor[salver_motor_6] = 127;
+		motor[salver_motor_7] = 127;
+	}
+		motor[salver_motor_6] = 0;
+		motor[salver_motor_7] = 0;
+}
+void salverdown()
+{
+	while(SensorValue[salver_potentiometer]<3300)
+	{
+		motor[salver_motor_6] = -127;
+		motor[salver_motor_7] = -127;
+	}
+		motor[salver_motor_6] = 0;
+		motor[salver_motor_7] = 0;
+}
+void updownauto(int updown_angle_int)
+{
+	int updown_angle_value;
+	int updown_angle;
+	updown_angle=2250-362*updown_angle_int;
+	updown_angle_value=SensorValue[updown_angle_sensor_2];
+	if(updown_angle>updown_angle_value)
+		while(SensorValue[updown_angle_sensor_2]<updown_angle)
+			updown(-30);
+	else if(updown_angle<updown_angle_value)
+		while(SensorValue[updown_angle_sensor_2]>updown_angle)
+			updown(127);
 
+		updown(20);
+
+}
 void turn(int angle)
 {
 	int delta=2;
 	int deltaOld=0;
 	int output;
 	int enterTime=nSysTime;
-	while(nSysTime-enterTime<2000) //&& nSysTime-enterTime<2000 )
+	while(delta>=1) //&& nSysTime-enterTime<2000 )
 	{
 		delta=angle-SensorValue[GYRO];
 		datalogAddValue(1,delta);
-		output=ANGLE_KP*delta+ANGLE_KD*(delta-deltaOld);
+		output=delta/ANGLE_KP+(delta-deltaOld)/ANGLE_KD;
 		run(-output,output);
 		writeDebugStream("%d\n",delta);
 		deltaOld=delta;
 	}
 }
+void run1()
+{
+	int target=1250;
+	int right_encoder,left_encoder;
+	int oldvalue,now;
+	int value;
+	SensorValue[run_left_encoder_sensor_3]=0;
+	SensorValue[run_right_encoder_sensor_1]=0;
+	while(abs(SensorValue[run_left_encoder_sensor_3])<target&&abs(SensorValue[run_right_encoder_sensor_1])<target)
+	{
+		right_encoder=SensorValue[run_right_encoder_sensor_1];
+		left_encoder=SensorValue[run_left_encoder_sensor_3];
+		now=target-right_encoder;
+		value=now/2;
+		run(value-5,value);
+	if(vexRT[Btn8L]==1)
+	{run(0,0);break;}
+
+	}
+	run(0,0);
+}
+
 void auto_1()
 {
-
+		//turn(900)
 }
 
 void auto_2()
@@ -258,15 +315,18 @@ task main()
 {
 
 	SensorType[GYRO]=sensorNone;
-	delay(1000);
+	delay(100);
 	SensorType[GYRO]=sensorGyro;
-	delay(2000);
-//automatic code
-	turn(90);
+	delay(200);
+
+	SensorValue[run_left_encoder_sensor_3]=0;
+	SensorValue[run_right_encoder_sensor_1]=0;
+//automatic code////////////////////////////////////////////////////////////
 
 
 
 
+////////////////////////////////////////////////////////////////////////////
   while (true)
   {
   	rotate_angle_value = SensorValue[rotate_angle_sensor_1];
@@ -274,6 +334,7 @@ task main()
     run_left_encoder_value = SensorValue[run_left_encoder_sensor_3];
     run_right_encoder_value = SensorValue[run_right_encoder_sensor_1];
 		updown_bump_value = SensorValue[updown_bump_sensor_5];
+
 
 	 /* if(updown_angle_value<1300)
 	  	{
@@ -317,5 +378,18 @@ task main()
     manual_intake();
     manual_rotate();
     manual_salver();
+
+
+    	////////////////automatic code//////////////////////
+  if(vexRT[Btn8U]==1)
+  	auto_1();
+
+
+
+  //////////////////////////////////////////////
+
+
+
+
   }
 }
