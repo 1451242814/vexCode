@@ -227,6 +227,7 @@ void Updown_Control(int updown_target_value)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
+void salverup()
 {
 	while(SensorValue[salver_potentiometer]>820)
 	{
@@ -246,6 +247,7 @@ void salverdown()
 		motor[salver_motor_6] = 0;
 		motor[salver_motor_7] = 0;
 }
+//The parameter is from 0 to 4
 void updownauto(int updown_angle_int)
 {
 	int updown_angle_value;
@@ -287,29 +289,67 @@ void run1()
 	SensorValue[run_left_encoder_sensor_3]=0;
 	SensorValue[run_right_encoder_sensor_1]=0;
 	while(abs(SensorValue[run_left_encoder_sensor_3])<target&&abs(SensorValue[run_right_encoder_sensor_1])<target)
-	{
+		{
 		right_encoder=SensorValue[run_right_encoder_sensor_1];
 		left_encoder=SensorValue[run_left_encoder_sensor_3];
 		now=target-right_encoder;
 		value=now/2;
-		run(value-5,value);
-	if(vexRT[Btn8L]==1)
-	{run(0,0);break;}
-
+		run(value,value);
 	}
 	run(0,0);
 }
 
+task run_t()
+{
+	run1();
+}
+task salverdown_t()
+{
+	salverdown();
+}
+task salverup_t()
+{
+	salverup();
+}
+task updownAuto1_t()
+{
+	updownauto(1);
+}
+task updownAuto0_t()
+{
+	updownauto(0);
+}
+void runSalverdown()
+{
+	startTask(run_t,255)	;
+	startTask(salverdown_t,255);
+	startTask(salverup_t,254);
+
+}
+
+task putYellow()
+{
+	updownauto(0);
+	//rotate(127);
+	//delay(1000);
+	intake(-120);
+	wait1Msec(500);
+}
+
 void auto_1()
 {
-		//turn(900)
+		updownauto(1);
+		startTask(run_t,255)	;
+		startTask(salverdown_t,255);
+		startTask(salverup_t,254);
+		startTask(putYellow,253);
+
 }
 
 void auto_2()
 {
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 task main()
 {
@@ -381,8 +421,8 @@ task main()
 
 
     	////////////////automatic code//////////////////////
-  if(vexRT[Btn8U]==1)
-  	auto_1();
+ // if(vexRT[Btn8U]==1)
+//  	auto_1();
 
 
 
