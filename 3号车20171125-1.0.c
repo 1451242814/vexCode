@@ -227,6 +227,7 @@ void Updown_Control(int updown_target_value)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
+void salverup()
 {
 	while(SensorValue[salver_potentiometer]>820)
 	{
@@ -303,6 +304,10 @@ void run1()
 void auto_1()
 {
 		//turn(900)
+	updownauto(1);
+	salverdown();
+	run1();
+	salverup();
 }
 
 void auto_2()
