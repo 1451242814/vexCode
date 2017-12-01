@@ -1,4 +1,4 @@
-#pragma config(Sensor, in1,    rotate_angle_sensor_1, sensorAnalog)
+#pragma config(Sensor, in1,    rotate_angle_sensor_1, sensorPotentiometer)
 #pragma config(Sensor, in2,    updown_angle_sensor_2, sensorPotentiometer)
 #pragma config(Sensor, in3,    salver_potentiometer, sensorPotentiometer)
 #pragma config(Sensor, in7,    GYRO,           sensorGyro)
@@ -227,6 +227,24 @@ void Updown_Control(int updown_target_value)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
+void rotateup()
+{
+	int rotate_angle;
+	rotate_angle=SensorValue[rotate_angle_sensor_1];
+	while(rotate_angle<00)
+	{
+		rotate(127);
+	}
+}
+void rotatedown()
+{
+	int rotate_angle;
+	rotate_angle=SensorValue[rotate_angle_sensor_1];
+	while(rotate_angle>00)
+	{
+		rotate(-127);
+	}
+}
 void salverup()
 {
 	while(SensorValue[salver_potentiometer]>820)
@@ -250,18 +268,19 @@ void salverdown()
 //The parameter is from 0 to 4
 void updownauto(int updown_angle_int)
 {
-	int updown_angle_value;
-	int updown_angle;
+	int updown_angle_value=0;
+	int updown_angle=0;
 	updown_angle=850+250*updown_angle_int;
 	updown_angle_value=SensorValue[updown_angle_sensor_2];
 	if(updown_angle<updown_angle_value)
 		while(SensorValue[updown_angle_sensor_2]>updown_angle)
-			updown(-100);
+			updown(-50);
 	else if(updown_angle>updown_angle_value)
 		while(SensorValue[updown_angle_sensor_2]<updown_angle)
-			updown(127);
-
-		updown(20);
+		{
+			updown_angle_value=SensorValue[updown_angle_sensor_2];
+			updown(abs(updown_angle-updown_angle_value)/2);
+		}
 
 }
 void turn(int angle)
@@ -298,6 +317,23 @@ void run1(int target)
 	run(0,0);
 }
 
+void pickYellow(int target)
+{
+	run1(target);
+	updownauto(1);
+	rotatedown();
+	updownauto(0);
+	clearTimer(T3);
+	while(time1[T3]<1000)
+	{intake(127);}
+	updownauto(1);
+	rotatedown();
+	updownauto(0);
+	clearTimer(T2);
+	while(time1[T2]<500)
+	{intake(-127);}
+}
+
 task run_t1()
 {
 	run1(1250);
@@ -327,7 +363,7 @@ task updownAuto0_t()
 //}
 
 task putYellow()
-{;
+{
 	updownauto(0);
 //	rotate(127);
 //	wait1Msec(2000)
@@ -338,19 +374,22 @@ task putYellow()
 	intake(-127);
 }
 }
-task pickYellow()
+task pickYellow1()
 {
+	pickYellow(90);
 }
 
 
 void auto_1()
 {
 		//startTask(watchDog,255);
-		updownauto(1);
-		startTask(salverdown_t,250);
-		startTask(run_t1,250)	;
-		startTask(salverup_t,249);
-		startTask(putYellow,248);
+		//updownauto(1);
+		//startTask(salverdown_t,250);
+		//startTask(run_t1,250)	;
+		//startTask(updownAuto1_t,249);
+		//startTask(salverup_t,249);
+		//startTask(putYellow,248);
+		startTask(pickYellow1,247);
 
 }
 
