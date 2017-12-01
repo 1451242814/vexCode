@@ -252,13 +252,13 @@ void updownauto(int updown_angle_int)
 {
 	int updown_angle_value;
 	int updown_angle;
-	updown_angle=2250-362*updown_angle_int;
+	updown_angle=850+250*updown_angle_int;
 	updown_angle_value=SensorValue[updown_angle_sensor_2];
-	if(updown_angle>updown_angle_value)
-		while(SensorValue[updown_angle_sensor_2]<updown_angle)
-			updown(-30);
-	else if(updown_angle<updown_angle_value)
+	if(updown_angle<updown_angle_value)
 		while(SensorValue[updown_angle_sensor_2]>updown_angle)
+			updown(-100);
+	else if(updown_angle>updown_angle_value)
+		while(SensorValue[updown_angle_sensor_2]<updown_angle)
 			updown(127);
 
 		updown(20);
@@ -280,9 +280,8 @@ void turn(int angle)
 		deltaOld=delta;
 	}
 }
-void run1()
+void run1(int target)
 {
-	int target=1250;
 	int right_encoder,left_encoder;
 	int oldvalue,now;
 	int value;
@@ -299,9 +298,9 @@ void run1()
 	run(0,0);
 }
 
-task run_t()
+task run_t1()
 {
-	run1();
+	run1(1250);
 }
 task salverdown_t()
 {
@@ -319,30 +318,39 @@ task updownAuto0_t()
 {
 	updownauto(0);
 }
-void runSalverdown()
-{
-	startTask(run_t,255)	;
-	startTask(salverdown_t,255);
-	startTask(salverup_t,254);
+//void runSalverdown()
+//{
+//	startTask(run_t,255)	;
+//	startTask(salverdown_t,255);
+//	startTask(salverup_t,254);
 
-}
+//}
 
 task putYellow()
-{
+{;
 	updownauto(0);
-	//rotate(127);
-	//delay(1000);
-	intake(-120);
-	wait1Msec(500);
+//	rotate(127);
+//	wait1Msec(2000)
+
+	clearTimer(T2);
+	while(time1[T2]<500)
+{
+	intake(-127);
 }
+}
+task pickYellow()
+{
+}
+
 
 void auto_1()
 {
+		//startTask(watchDog,255);
 		updownauto(1);
-		startTask(run_t,255)	;
-		startTask(salverdown_t,255);
-		startTask(salverup_t,254);
-		startTask(putYellow,253);
+		startTask(salverdown_t,250);
+		startTask(run_t1,250)	;
+		startTask(salverup_t,249);
+		startTask(putYellow,248);
 
 }
 
@@ -421,8 +429,8 @@ task main()
 
 
     	////////////////automatic code//////////////////////
- // if(vexRT[Btn8U]==1)
-//  	auto_1();
+  if(vexRT[Btn8U]==1)
+  	auto_1();
 
 
 
