@@ -231,8 +231,9 @@ void rotateup()
 {
 	int rotate_angle;
 	rotate_angle=SensorValue[rotate_angle_sensor_1];
-	while(rotate_angle<00)
+	while(rotate_angle<3900)
 	{
+		rotate_angle=SensorValue[rotate_angle_sensor_1];
 		rotate(127);
 	}
 }
@@ -240,8 +241,9 @@ void rotatedown()
 {
 	int rotate_angle;
 	rotate_angle=SensorValue[rotate_angle_sensor_1];
-	while(rotate_angle>00)
+	while(rotate_angle>1900)
 	{
+		rotate_angle=SensorValue[rotate_angle_sensor_1];
 		rotate(-127);
 	}
 }
@@ -270,7 +272,7 @@ void updownauto(int updown_angle_int)
 {
 	int updown_angle_value=0;
 	int updown_angle=0;
-	updown_angle=850+250*updown_angle_int;
+	updown_angle=870+250*updown_angle_int;
 	updown_angle_value=SensorValue[updown_angle_sensor_2];
 	if(updown_angle<updown_angle_value)
 		while(SensorValue[updown_angle_sensor_2]>updown_angle)
@@ -299,7 +301,7 @@ void turn(int angle)
 		deltaOld=delta;
 	}
 }
-void run1(int target)
+void run1(int target,int b)
 {
 	int right_encoder,left_encoder;
 	int oldvalue,now;
@@ -311,7 +313,7 @@ void run1(int target)
 		right_encoder=SensorValue[run_right_encoder_sensor_1];
 		left_encoder=SensorValue[run_left_encoder_sensor_3];
 		now=target-right_encoder;
-		value=now/2;
+		value=now/b;
 		run(value,value);
 	}
 	run(0,0);
@@ -319,24 +321,25 @@ void run1(int target)
 
 void pickYellow(int target)
 {
-	run1(target);
-	updownauto(1);
-	rotatedown();
-	updownauto(0);
-	clearTimer(T3);
-	while(time1[T3]<1000)
-	{intake(127);}
+	run1(target,2);
 	updownauto(1);
 	rotatedown();
 	updownauto(0);
 	clearTimer(T2);
+	while(time1[T2]<1000)
+	{intake(127);}
+	updownauto(1);
+	rotateup();
+	//updownauto(0);
+	clearTimer(T2);
 	while(time1[T2]<500)
 	{intake(-127);}
+	intake(10);
 }
 
 task run_t1()
 {
-	run1(1250);
+	run1(1250,4);
 }
 task salverdown_t()
 {
@@ -373,22 +376,23 @@ task putYellow()
 {
 	intake(-127);
 }
+intake(0);
 }
 task pickYellow1()
 {
-	pickYellow(90);
+	pickYellow(70);
 }
 
 
 void auto_1()
 {
 		//startTask(watchDog,255);
-		//updownauto(1);
-		//startTask(salverdown_t,250);
-		//startTask(run_t1,250)	;
-		//startTask(updownAuto1_t,249);
-		//startTask(salverup_t,249);
-		//startTask(putYellow,248);
+		updownauto(1);
+		startTask(salverdown_t,250);
+		startTask(run_t1,250);
+		startTask(updownAuto1_t,249);
+		startTask(salverup_t,249);
+		startTask(putYellow,248);
 		startTask(pickYellow1,247);
 
 }
