@@ -1,6 +1,7 @@
 #pragma config(Sensor, in1,    rotate_angle_sensor_1, sensorPotentiometer)
 #pragma config(Sensor, in2,    updown_angle_sensor_2, sensorPotentiometer)
 #pragma config(Sensor, in3,    salver_potentiometer, sensorPotentiometer)
+#pragma config(Sensor, in6,    lineBack,       sensorNone)
 #pragma config(Sensor, in7,    GYRO,           sensorGyro)
 #pragma config(Sensor, dgtl1,  run_right_encoder_sensor_1, sensorQuadEncoder)
 #pragma config(Sensor, dgtl3,  run_left_encoder_sensor_3, sensorQuadEncoder)
@@ -23,8 +24,8 @@
 
 //V1.0	I increased the static speed of the clip from 19 to 25
 //			by liu wenbin 20171125 night
-#define ANGLE_KP 26
-#define ANGLE_KD 100
+#define ANGLE_KP 0.5
+#define ANGLE_KD 0.2
 
 
 int run_left_encoder_value;
@@ -288,8 +289,8 @@ void turn(int angle)
 	int delta=2;
 	int deltaOld=0;
 	int output;
-	int enterTime=nSysTime;
-	while(delta>=1) //&& nSysTime-enterTime<2000 )
+	clearTimer(T2);
+	while(abs(delta) <=1 && abs(deltaOld)<=1) //&& nSysTime-enterTime<2000 )
 	{
 		delta=angle-SensorValue[GYRO];
 		datalogAddValue(1,delta);
@@ -315,6 +316,29 @@ void run1(int target)
 		run(value,value);
 	}
 	run(0,0);
+}
+
+void findLine(int left,int right)
+{
+	float k1=1;
+  float k2=0;
+	int power;
+	int store_angle;
+	int	color=SensorValue[in6];
+	while(color>2800)
+  {
+  	color=SensorValue[in6];
+		run(left,right);
+	}
+                                        //Clear Encoders
+  SensorValue[run_right_encoder_sensor_1] = 0;
+  SensorValue[run_left_encoder_sensor_3] = 0;
+	clearTimer(T1);
+	while(time1(T1)<2000)
+	{
+	  power=k1*SensorValue[run_right_encoder_sensor_1];
+		run(power,power);
+	}
 }
 
 void pickYellow(int target)
@@ -354,6 +378,10 @@ task updownAuto0_t()
 {
 	updownauto(0);
 }
+task findBackLine_t()
+{
+	findLine(-127,-127);
+}
 //void runSalverdown()
 //{
 //	startTask(run_t,255)	;
@@ -379,6 +407,10 @@ task pickYellow1()
 	pickYellow(90);
 }
 
+task turn45()
+{
+	turn(45);
+}
 
 void auto_1()
 {
@@ -389,8 +421,10 @@ void auto_1()
 		//startTask(updownAuto1_t,249);
 		//startTask(salverup_t,249);
 		//startTask(putYellow,248);
+		//startTask(pickYellow1,247);
 		startTask(pickYellow1,247);
-
+		startTask(findBackLine_t,246);
+		//startTask(turn45,245);
 }
 
 void auto_2()
