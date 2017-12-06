@@ -26,7 +26,7 @@
 //V1.0	I increased the static speed of the clip from 19 to 25
 //			by liu wenbin 20171125 night
 #define ANGLE_KP 0.25
-#define ANGLE_KD 0.1
+#define ANGLE_KD 0.05
 
 
 int run_left_encoder_value;
@@ -292,14 +292,15 @@ void updownauto(int updown_angle_int)
 }
 void turn(int angle)
 {
+	int targetangle;
+	targetangle=SensorValue[GYRO]+angle*10;
 	int delta=2;
 	int deltaOld=0;
 	int output;
 	clearTimer(T2);
-	while(time1(T2)<=2000) //&& nSysTime-enterTime<2000 )
+	while(time1[T2]<=2000) //&& nSysTime-enterTime<2000 )
 	{
-		delta=angle*10-SensorValue[GYRO];
-		datalogAddValue(1,delta);
+		delta=targetangle-SensorValue[GYRO];
 		output=delta*ANGLE_KP+(delta-deltaOld)*ANGLE_KD;
 		run(output,-output);
 		deltaOld=delta;
@@ -312,16 +313,21 @@ void run1(int target,int b)
 	int motor_value;
 	SensorValue[run_left_encoder_sensor_3]=0;
 	SensorValue[run_right_encoder_sensor_1]=0;
-	while(abs(SensorValue[run_left_encoder_sensor_3])<target&&abs(SensorValue[run_right_encoder_sensor_1])<target)
+	while(abs(SensorValue[run_left_encoder_sensor_3])<abs(target)&&abs(SensorValue[run_right_encoder_sensor_1])<abs(target))
 		{
 		right_encoder=SensorValue[run_right_encoder_sensor_1];
 		left_encoder=SensorValue[run_left_encoder_sensor_3];
 		now=target-right_encoder;
-		if(now>500)
-			motor_value=now;
-	else
-		motor_value=now/b;
-		run(motor_value,motor_value);
+		if(now>300)
+			motor_value=127;
+		else if(now<-300)
+			motor_value=-127;
+		else
+			motor_value=now/b;
+		if(abs(motor_value)>20)
+			run(motor_value-20,motor_value);
+		else
+			run(motor_value,motor_value);
 		}
 		run(0,0);
 }
@@ -363,6 +369,7 @@ void pickYellow(int target)
 	clearTimer(T2);
 	while(time1[T2]<500)
 	{intake(-127);}
+	intake(0);
 }
 
 task run_t1()
@@ -385,18 +392,52 @@ task updownAuto0_t()
 {
 	updownauto(0);
 }
-task findBackLine_t()
+task findBackLine_turn_t()
 {
 	run1(-500,1);
 	findLine(-127,-127);
+	turn(-135);
+	run1(750,2);
+	turn(-90);
 }
-//void runSalverdown()
-//{
-//	startTask(run_t,255)	;
-//	startTask(salverdown_t,255);
-//	startTask(salverup_t,254);
-
-//}
+task putbase1()
+{
+	while(SensorValue[salver_potentiometer]>3400)
+	{
+		motor[salver_motor_6] = 127;
+		motor[salver_motor_7] = 127;
+	}
+		motor[salver_motor_6] = 0;
+		motor[salver_motor_7] = 0;
+		run1(650,1);
+		while(SensorValue[salver_potentiometer]>2300)
+	{
+		motor[salver_motor_6] = 127;
+		motor[salver_motor_7] = 127;
+	}
+		motor[salver_motor_6] = 0;
+		motor[salver_motor_7] = 0;
+		run1(-400,1);
+		findLine(-127,-127);
+		salverup();
+}
+task turn_run_bump()
+{
+	turn(90);
+	run1(900,4);
+	run1(-60,1);
+	turn(90);
+}
+task run_t2()
+{
+	run1(900,3);
+	salverup();
+	run1(-500,3);
+	findLine(-127,-127);
+	turn(135);
+	run1(750,2);
+	turn(90);
+}
 
 task putYellow()
 {
@@ -416,22 +457,19 @@ task pickYellow1()
 	pickYellow(70);
 }
 
-task turn45()
-{
-	turn(90);
-}
-
 void auto_1()
 {
-		updownauto(1);
-		startTask(salverdown_t,250);
-		startTask(run_t1,250)	;
-		startTask(salverup_t,249);
-		startTask(putYellow,248);
-		startTask(pickYellow1,247);
-		startTask(findBackLine_t,246);
-		//startTask(turn45,245);
-
+		//updownauto(1);
+		//startTask(salverdown_t,250);
+		//startTask(run_t1,250)	;
+		//startTask(salverup_t,249);
+		//startTask(putYellow,248);
+		//startTask(pickYellow1,247);
+		//startTask(findBackLine_turn_t,246);
+		//startTask(putbase1,245);
+		startTask(turn_run_bump,244);
+		startTask(run_t2,243);
+		startTask(salverdown_t,243);
 }
 
 void auto_2()
@@ -442,10 +480,10 @@ void auto_2()
 task main()
 {
 
-	//SensorType[GYRO]=sensorNone;
-	//delay(1000);
-	//SensorType[GYRO]=sensorGyro;
-	//delay(2000);
+	SensorType[GYRO]=sensorNone;
+	delay(1000);
+	SensorType[GYRO]=sensorGyro;
+	delay(2000);
 
 	SensorValue[run_left_encoder_sensor_3]=0;
 	SensorValue[run_right_encoder_sensor_1]=0;
