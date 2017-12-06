@@ -374,9 +374,13 @@ void pickYellow(int target)
 
 task run_t1()
 {
-	run1(1250,4);
+	run1(1250,2);
 }
 task salverdown_t()
+{
+	salverdown();
+}
+task salverdown_t2()
 {
 	salverdown();
 }
@@ -397,8 +401,8 @@ task findBackLine_turn_t()
 	run1(-500,1);
 	findLine(-127,-127);
 	turn(-135);
-	run1(750,2);
-	turn(-90);
+	run1(500,2);
+	turn(-80);
 }
 task putbase1()
 {
@@ -409,7 +413,7 @@ task putbase1()
 	}
 		motor[salver_motor_6] = 0;
 		motor[salver_motor_7] = 0;
-		run1(650,1);
+		run1(700,1);
 		while(SensorValue[salver_potentiometer]>2300)
 	{
 		motor[salver_motor_6] = 127;
@@ -424,7 +428,13 @@ task putbase1()
 task turn_run_bump()
 {
 	turn(90);
-	run1(900,4);
+	run1(800,3);
+	turn(-45);
+	clearTimer(T3);
+	while(time1(T3)<500)
+	{
+		run(127,127);
+	}
 	run1(-60,1);
 	turn(90);
 }
@@ -435,7 +445,7 @@ task run_t2()
 	run1(-500,3);
 	findLine(-127,-127);
 	turn(135);
-	run1(750,2);
+	run1(650,2);
 	turn(90);
 }
 
@@ -459,17 +469,17 @@ task pickYellow1()
 
 void auto_1()
 {
-		//updownauto(1);
-		//startTask(salverdown_t,250);
-		//startTask(run_t1,250)	;
-		//startTask(salverup_t,249);
-		//startTask(putYellow,248);
-		//startTask(pickYellow1,247);
-		//startTask(findBackLine_turn_t,246);
-		//startTask(putbase1,245);
+		updownauto(1);
+		startTask(salverdown_t,250);
+		startTask(run_t1,250)	;
+		startTask(salverup_t,249);
+		startTask(putYellow,248);
+		startTask(pickYellow1,247);
+		startTask(findBackLine_turn_t,246);
+		startTask(putbase1,245);
 		startTask(turn_run_bump,244);
 		startTask(run_t2,243);
-		startTask(salverdown_t,243);
+		startTask(salverdown_t2,243);
 }
 
 void auto_2()
