@@ -36,6 +36,7 @@ int updown_angle_value;
 int rotate_angle_value;
 int salver_angle_value;
 int gyro_value;
+int colour;
 int bump_flag=0;
 
 int cp6_value;
@@ -109,9 +110,9 @@ void manual_rotate()//Xuan_Zhuan
 
 void manual_salver()//Tuo_Pan
 {
-	if(vexRT[Btn7L]==1) salver(-127);
-	else if(vexRT[Btn7U]==1) salver(127);
-	else if((vexRT[Btn7L]==0) && (vexRT[Btn7U]==0)) salver(0);
+	if(vexRT[Btn8L]==1) salver(-127);
+	else if(vexRT[Btn8U]==1) salver(127);
+	else if((vexRT[Btn8L]==0) && (vexRT[Btn8U]==0)) salver(0);
 }
 
 void manual_intake()//Jia_Qu
@@ -298,7 +299,7 @@ void turn(int angle)
 	int deltaOld=0;
 	int output;
 	clearTimer(T2);
-	while(time1[T2]<=2000) //&& nSysTime-enterTime<2000 )
+	while(time1[T2]<=2500) //&& nSysTime-enterTime<2000 )
 	{
 		delta=targetangle-SensorValue[GYRO];
 		output=delta*ANGLE_KP+(delta-deltaOld)*ANGLE_KD;
@@ -324,9 +325,10 @@ void run1(int target,int b)
 			motor_value=-127;
 		else
 			motor_value=now/b;
-		if(abs(motor_value)>20)
-			run(motor_value-20,motor_value);
-		else
+		//if(abs(motor_value)>20)
+		//	run(motor_value-20,motor_value);
+		//else
+		//	run(motor_value,motor_value);
 			run(motor_value,motor_value);
 		}
 		run(0,0);
@@ -365,11 +367,12 @@ void pickYellow(int target)
 	intake(10);
 	updownauto(1);
 	rotateup();
-	//updownauto(0);
+	updownauto(0);
 	clearTimer(T2);
 	while(time1[T2]<500)
 	{intake(-127);}
 	intake(0);
+	updownauto(1);
 }
 
 task run_t1()
@@ -398,11 +401,11 @@ task updownAuto0_t()
 }
 task findBackLine_turn_t()
 {
-	run1(-500,1);
+	run1(-600,1);
 	findLine(-127,-127);
 	turn(-135);
-	run1(500,2);
-	turn(-80);
+	run1(550,2);
+	turn(-85);
 }
 task putbase1()
 {
@@ -413,7 +416,7 @@ task putbase1()
 	}
 		motor[salver_motor_6] = 0;
 		motor[salver_motor_7] = 0;
-		run1(700,1);
+		run1(800,1);
 		while(SensorValue[salver_potentiometer]>2300)
 	{
 		motor[salver_motor_6] = 127;
@@ -421,22 +424,27 @@ task putbase1()
 	}
 		motor[salver_motor_6] = 0;
 		motor[salver_motor_7] = 0;
-		run1(-400,1);
+		run1(-300,1);
 		findLine(-127,-127);
 		salverup();
 }
 task turn_run_bump()
 {
-	turn(90);
-	run1(800,3);
-	turn(-45);
+	turn(-90);
+	run1(-800,3);
 	clearTimer(T3);
 	while(time1(T3)<500)
 	{
-		run(127,127);
+		run(-50,-50);
 	}
-	run1(-60,1);
-	turn(90);
+	turn(45);
+	clearTimer(T3);
+	while(time1(T3)<500)
+	{
+		run(-100,-100);
+	}
+	run1(60,2);
+	turn(-90);
 }
 task run_t2()
 {
@@ -445,10 +453,15 @@ task run_t2()
 	run1(-500,3);
 	findLine(-127,-127);
 	turn(135);
-	run1(650,2);
+	run1(400,2);
 	turn(90);
 }
-
+task putbase2()
+{
+	run1(200,1);
+	salverdown();
+	run1(-200,1);
+}
 task putYellow()
 {
 	updownauto(0);
@@ -480,6 +493,7 @@ void auto_1()
 		startTask(turn_run_bump,244);
 		startTask(run_t2,243);
 		startTask(salverdown_t2,243);
+		startTask(putbase2,242);
 }
 
 void auto_2()
@@ -512,6 +526,7 @@ task main()
 		updown_bump_value = SensorValue[updown_bump_sensor_5];
 		salver_angle_value = SensorValue[salver_potentiometer];
 		gyro_value =SensorValue[GYRO];
+		colour=SensorValue[lineBack];
 
 
 	 /* if(updown_angle_value<1300)
@@ -559,7 +574,7 @@ task main()
 
 
     	////////////////automatic code//////////////////////
-  if(vexRT[Btn8U]==1)
+  if(vexRT[Btn7U]==1)
   	auto_1();
  	int angle = SensorValue[GYRO];
 
