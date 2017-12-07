@@ -26,7 +26,9 @@
 //V1.0	I increased the static speed of the clip from 19 to 25
 //			by liu wenbin 20171125 night
 #define ANGLE_KP 0.25
-#define ANGLE_KD 0.05
+#define ANGLE_KP 0.9
+#define ANGLE_KD 0.2
+#define ANGLE_KI 0
 
 
 int run_left_encoder_value;
@@ -236,7 +238,8 @@ void rotateup()
 {
 	int rotate_angle;
 	rotate_angle=SensorValue[rotate_angle_sensor_1];
-	while(rotate_angle<3500)
+	clearTimer(T2);
+	while(rotate_angle<3500&&time1(T2)<1000)
 	{
 		rotate_angle=SensorValue[rotate_angle_sensor_1];
 		rotate(127);
@@ -246,7 +249,7 @@ void rotatedown()
 {
 	int rotate_angle;
 	rotate_angle=SensorValue[rotate_angle_sensor_1];
-	while(rotate_angle>1900)
+	while(rotate_angle>1900&&time1(T2)<1000)
 	{
 		rotate_angle=SensorValue[rotate_angle_sensor_1];
 		rotate(-127);
@@ -254,7 +257,8 @@ void rotatedown()
 }
 void salverup()
 {
-	while(SensorValue[salver_potentiometer]<3800)
+	clearTimer(T2);
+	while(SensorValue[salver_potentiometer]<3800&&time1[T2]<2000)
 	{
 		motor[salver_motor_6] = -127;
 		motor[salver_motor_7] = -127;
@@ -264,7 +268,8 @@ void salverup()
 }
 void salverdown()
 {
-	while(SensorValue[salver_potentiometer]>2100)
+	clearTimer(T2);
+	while(SensorValue[salver_potentiometer]>2100&&time1(T2)<2000)
 	{
 		motor[salver_motor_6] = 127;
 		motor[salver_motor_7] = 127;
@@ -299,7 +304,7 @@ void turn(int angle)
 	int deltaOld=0;
 	int output;
 	clearTimer(T2);
-	while(time1[T2]<=2500) //&& nSysTime-enterTime<2000 )
+	while(time1[T2]<=2000) //&& nSysTime-enterTime<2000 )
 	{
 		delta=targetangle-SensorValue[GYRO];
 		output=delta*ANGLE_KP+(delta-deltaOld)*ANGLE_KD;
@@ -307,6 +312,47 @@ void turn(int angle)
 		deltaOld=delta;
 	}
 }
+void turnAbsAngle(int angle)
+{
+	angle*=10;
+	int delta=2;
+	int deltaOld=0;
+	int deltaAll=0;
+	int output;
+	int angleSen;
+	clearTimer(T2);
+	while(time1[T2]<=2000) //&& nSysTime-enterTime<2000 )
+	{
+		angleSen=SensorValue[GYRO];
+		delta=angle-angleSen;
+		deltaAll+=delta;
+		output=delta*ANGLE_KP+(delta-deltaOld)*ANGLE_KD+deltaAll*ANGLE_KI;
+		run(output,-output);
+		deltaOld=delta;
+		datalogAddValue(1,delta);
+	}
+}
+void turnAbsAngle_L(int angle)
+{
+	angle*=10;
+	int delta=2;
+	int deltaOld=0;
+	int deltaAll=0;
+	int output;
+	int angleSen;
+	clearTimer(T2);
+	while(time1[T2]<=2000) //&& nSysTime-enterTime<2000 )
+	{
+		angleSen=SensorValue[GYRO];
+		delta=angle-angleSen;
+		deltaAll+=delta;
+		output=delta*ANGLE_KP+(delta-deltaOld)*ANGLE_KD+deltaAll*ANGLE_KI;
+		run(output/5,-output);
+		deltaOld=delta;
+		datalogAddValue(1,delta);
+	}
+}
+
 void run1(int target,int b)
 {
 	int right_encoder,left_encoder;
@@ -325,11 +371,13 @@ void run1(int target,int b)
 			motor_value=-127;
 		else
 			motor_value=now/b;
-		//if(abs(motor_value)>20)
-		//	run(motor_value-20,motor_value);
-		//else
-		//	run(motor_value,motor_value);
+		if(motor_value>5)
+			run(motor_value-5,motor_value);
+		else if(motor_value<-5)
+			run(motor_value+5,motor_value);
+		else
 			run(motor_value,motor_value);
+			//run(motor_value,motor_value);
 		}
 		run(0,0);
 }
@@ -403,9 +451,10 @@ task findBackLine_turn_t()
 {
 	run1(-600,1);
 	findLine(-127,-127);
-	turn(-135);
-	run1(550,2);
-	turn(-85);
+	run1(-150,2);
+	turnAbsAngle(-135);
+	run1(425,2);
+	turnAbsAngle(-225);
 }
 task putbase1()
 {
@@ -416,7 +465,11 @@ task putbase1()
 	}
 		motor[salver_motor_6] = 0;
 		motor[salver_motor_7] = 0;
-		run1(800,1);
+	clearTimer(T2);
+	while(time1[T2]<1000)
+	{
+		run(127,127);
+	}
 		while(SensorValue[salver_potentiometer]>2300)
 	{
 		motor[salver_motor_6] = 127;
@@ -430,31 +483,31 @@ task putbase1()
 }
 task turn_run_bump()
 {
-	turn(-90);
-	run1(-800,3);
+	turnAbsAngle(-135);
+	run1(600,3);
+	clearTimer(T3);
+	while(time1(T3)<300)
+	{
+		run(50,50);
+	}
+	turnAbsAngle(-180);
 	clearTimer(T3);
 	while(time1(T3)<500)
 	{
-		run(-50,-50);
+		run(100,100);
 	}
-	turn(45);
-	clearTimer(T3);
-	while(time1(T3)<500)
-	{
-		run(-100,-100);
-	}
-	run1(60,2);
-	turn(-90);
+	//run1(-40,1);
+	turnAbsAngle_L(-100);
 }
 task run_t2()
 {
 	run1(900,3);
 	salverup();
-	run1(-500,3);
+	run1(-700,3);
 	findLine(-127,-127);
-	turn(135);
+	turnAbsAngle(45);
 	run1(400,2);
-	turn(90);
+	turnAbsAngle(135);
 }
 task putbase2()
 {
@@ -576,7 +629,6 @@ task main()
     	////////////////automatic code//////////////////////
   if(vexRT[Btn7U]==1)
   	auto_1();
- 	int angle = SensorValue[GYRO];
 
 	//datalogAddValue
 
