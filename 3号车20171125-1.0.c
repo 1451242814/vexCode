@@ -25,7 +25,6 @@
 //
 //V1.0	I increased the static speed of the clip from 19 to 25
 //			by liu wenbin 20171125 night
-#define ANGLE_KP 0.25
 #define ANGLE_KP 0.9
 #define ANGLE_KD 0.2
 #define ANGLE_KI 0
